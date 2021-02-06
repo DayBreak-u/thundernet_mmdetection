@@ -375,11 +375,11 @@ static int detect_thundernet(const cv::Mat& bgr,std::vector<Object>& objects)
     thundernet_rcnn.opt.use_vulkan_compute = true;
 
 
-    thundernet.load_param("../models/thundernet_mbv2_rpn-opt-fp16.param");
-    thundernet.load_model("../models/thundernet_mbv2_rpn-opt-fp16.bin");
+    thundernet.load_param("../models/thundernet_mbv2_rpn-op.param");
+    thundernet.load_model("../models/thundernet_mbv2_rpn-opt.bin");
 
-    thundernet_rcnn.load_param("../models/thundernet_mbv2_rcnn-opt-fp16.param");
-    thundernet_rcnn.load_model("../models/thundernet_mbv2_rcnn-opt-fp16.bin");
+    thundernet_rcnn.load_param("../models/thundernet_mbv2_rcnn-opt.param");
+    thundernet_rcnn.load_model("../models/thundernet_mbv2_rcnn-opt.bin");
 
     const int pre_nms_topN = 3000;
     const int after_nms_topN = 200;
