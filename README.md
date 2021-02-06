@@ -10,10 +10,11 @@ Results and models are available in the.
 
 |                    | mobilenetv2   | shufflenetv2  | 
 |--------------------|:-------------:|:-------------:|
-| ThunderNet         | ✓             |               | 
+| ThunderNet         | ✓           |               | 
 
 
-
+## voc0712
+thundernet_voc_mobilenetv2 目前mAP 0.70,训练不够充分
 
 ## Get Started
 
