@@ -14,13 +14,19 @@
 
 #include "net.h"
 
+
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <stdio.h>
 #include <vector>
-#include<iostream>
+#include <iostream>
 
+namespace ncnn {
+
+// get now timestamp in ms
+NCNN_EXPORT double get_current_time();
+}
 struct Object
 {
     cv::Rect_<float> rect;
@@ -184,7 +190,6 @@ static void generate_proposals(const ncnn::Mat& anchors, int feat_stride, const 
                 float prob = score[index];
 
 
-
                 // apply center size
                 float dx = bbox.channel(0)[index];
                 float dy = bbox.channel(1)[index];
@@ -262,9 +267,9 @@ int psroialign( ncnn::Mat bottom_blob,ncnn::Mat  roi_blob, ncnn::Mat& top_blob)
 {
 
     float spatial_scale = 1./16;
-    int pooled_height = 7;
-    int pooled_width = 7;
-    int output_dim = 5;
+    int pooled_height = 6;
+    int pooled_width = 6;
+    int output_dim = 6;
     int sampling_ratio = 2;
 
 
@@ -286,10 +291,10 @@ int psroialign( ncnn::Mat bottom_blob,ncnn::Mat  roi_blob, ncnn::Mat& top_blob)
     // For each ROI R = [x y w h]: avg pool over R
     const float* roi_ptr = roi_blob;
 
-    float roi_x1 = static_cast<float>(round(roi_ptr[0]) * spatial_scale);
-    float roi_y1 = static_cast<float>(round(roi_ptr[1]) * spatial_scale);
-    float roi_x2 = static_cast<float>(round(roi_ptr[2] + 1.f) * spatial_scale);
-    float roi_y2 = static_cast<float>(round(roi_ptr[3] + 1.f) * spatial_scale);
+    float roi_x1 = static_cast<float>(roi_ptr[0] * spatial_scale - 0.5f);
+    float roi_y1 = static_cast<float>(roi_ptr[1] * spatial_scale - 0.5f);
+    float roi_x2 = static_cast<float>(roi_ptr[2] * spatial_scale - 0.5f);
+    float roi_y2 = static_cast<float>(roi_ptr[3] * spatial_scale - 0.5f);
 
     float roi_w = std::max(roi_x2 - roi_x1, 0.1f);
     float roi_h = std::max(roi_y2 - roi_y1, 0.1f);
@@ -297,7 +302,8 @@ int psroialign( ncnn::Mat bottom_blob,ncnn::Mat  roi_blob, ncnn::Mat& top_blob)
     float bin_size_w = roi_w / (float)pooled_width;
     float bin_size_h = roi_h / (float)pooled_height;
 
-    #pragma omp parallel for num_threads(8)
+
+//    #pragma omp parallel for num_threads(1)
     for (int q = 0; q < output_dim; q++)
     {
         float* outptr = top_blob.channel(q);
@@ -319,7 +325,6 @@ int psroialign( ncnn::Mat bottom_blob,ncnn::Mat  roi_blob, ncnn::Mat& top_blob)
                 wstart = std::min(std::max(wstart, 0), w);
                 hend = std::min(std::max(hend, 0), h);
                 wend = std::min(std::max(wend, 0), w);
-
 
                 int bin_grid_h = (int)(sampling_ratio > 0 ? sampling_ratio : ceil(hend - hstart));
                 int bin_grid_w = (int)(sampling_ratio > 0 ? sampling_ratio : ceil(wend - wstart));
@@ -344,14 +349,7 @@ int psroialign( ncnn::Mat bottom_blob,ncnn::Mat  roi_blob, ncnn::Mat& top_blob)
                         sum += v;
                     }
                 }
-//                for (int y = hstart; y < hend; y++)
-//                {
-//                    for (int x = wstart; x < wend; x++)
-//                    {
-//                        int index = y * w + x;
-//                        sum += ptr[index];
-//                    }
-//                }
+
 
                 outptr[pw] = is_empty ? 0.f : (sum / (float)area);
             }
@@ -368,60 +366,31 @@ int psroialign( ncnn::Mat bottom_blob,ncnn::Mat  roi_blob, ncnn::Mat& top_blob)
 
 static int detect_thundernet(const cv::Mat& bgr,std::vector<Object>& objects)
 {
+    objects.clear();
     ncnn::Net thundernet;
     ncnn::Net thundernet_rcnn;
 
-    thundernet.opt.use_vulkan_compute = true;
-    thundernet_rcnn.opt.use_vulkan_compute = true;
+//    thundernet.opt.use_vulkan_compute = true;
+//    thundernet_rcnn.opt.use_vulkan_compute = true;
 
 
-    thundernet.load_param("../models/thundernet_mbv2_rpn-op.param");
-    thundernet.load_model("../models/thundernet_mbv2_rpn-opt.bin");
-
-    thundernet_rcnn.load_param("../models/thundernet_mbv2_rcnn-opt.param");
-    thundernet_rcnn.load_model("../models/thundernet_mbv2_rcnn-opt.bin");
-
-    const int pre_nms_topN = 3000;
-    const int after_nms_topN = 200;
-    const float nms_rpn = 0.7f;
-    const float nms_threshold = 0.5f;
-    const float confidence_thresh = 0.4f;
-    const int max_per_image = 100;
-    const int target_size = 320;
+    thundernet.load_param("../models/thundernet_shufflenetv2_15_rpn_fp16.param");
+    thundernet.load_model("../models/thundernet_shufflenetv2_15_rpn_fp16.bin");
 
 
-    int img_w = bgr.cols;
-    int img_h = bgr.rows;
-    float scale_w = (float)target_size / img_w;
-    float scale_h = (float)target_size / img_h;
 
-    ncnn::Mat in = ncnn::Mat::from_pixels_resize(bgr.data, ncnn::Mat::PIXEL_BGR2RGB,img_w,img_h ,target_size, target_size);
-
-    const float mean_vals[3] = {123.68f, 116.78f, 103.94f};
-    const float norm_vals[3] = {1.0 / 58.40f, 1.0 / 57.12f, 1.0 / 57.38f};
-    in.substract_mean_normalize(mean_vals, norm_vals);
-
-    ncnn::Extractor ex = thundernet.create_extractor();
-
-    ex.input("input", in);
-
-    std::vector<Object> proposal_boxes;
-
-
-    ncnn::Mat score_blob, bbox_blob, feat;
-    ex.extract("rpn_cls_score", score_blob);
-    ex.extract("rpn_bbox_pred", bbox_blob);
-    ex.extract("x", feat);
+    thundernet_rcnn.load_param("../models/thundernet_shufflenetv2_15_rcnn_fp16.param");
+    thundernet_rcnn.load_model("../models/thundernet_shufflenetv2_15_rcnn_fp16.bin");
 
 
     const int base_size = 16;
     const int feat_stride = 16;
-    ncnn::Mat ratios(5);
+    ncnn::Mat ratios(3);
     ratios[0] = 0.5f;
-    ratios[1] = 0.75f;
-    ratios[2] = 1.f;
-    ratios[3] = 1.333f;
-    ratios[4] = 2.f;
+//    ratios[1] = 0.75f;
+    ratios[1] = 1.f;
+//    ratios[3] = 1.333f;
+    ratios[2] = 2.f;
     ncnn::Mat scales(5);
     scales[0] = 2.f;
     scales[1] = 4.f;
@@ -429,6 +398,47 @@ static int detect_thundernet(const cv::Mat& bgr,std::vector<Object>& objects)
     scales[3] = 16.f;
     scales[4] = 32.f;
     ncnn::Mat anchors = generate_anchors(base_size, ratios, scales);
+
+
+    const int pre_nms_topN = 1500;
+    const int after_nms_topN = 200;
+    const float nms_rpn = 0.7f;
+    const float nms_threshold = 0.5f;
+    const float confidence_thresh = 0.4f;
+    const int max_per_image = 100;
+    const int target_size = 352;
+    const int numThread = 1;
+
+
+    int img_w = bgr.cols;
+    int img_h = bgr.rows;
+    float scale_w = (float)target_size / img_w;
+    float scale_h = (float)target_size / img_h;
+
+    ncnn::Mat in = ncnn::Mat::from_pixels_resize(bgr.data, ncnn::Mat::PIXEL_BGR,img_w,img_h ,target_size, target_size);
+
+//    const float mean_vals[3] = {123.68f, 116.78f, 103.94f};
+//    const float norm_vals[3] = {1.0 / 58.40f, 1.0 / 57.12f, 1.0 / 57.38f};
+//    const float norm_vals[3] = {1.0 / 255.f, 1.0 / 255.f,1.0 / 255.f};
+//    in.substract_mean_normalize(0, 1);
+
+    ncnn::Extractor ex = thundernet.create_extractor();
+
+    ex.input("input", in);
+    ncnn::Mat score_blob, bbox_blob, feat;
+
+    std::vector<Object> proposal_boxes;
+    double t1 =ncnn::get_current_time();
+
+
+    ex.extract("rpn_bbox_pred", bbox_blob);
+    ex.extract("rpn_cls_score", score_blob);
+    ex.extract("x", feat);
+    double t2 = ncnn::get_current_time();
+    std::cout <<t2 - t1 << std::endl;
+
+
+
 
     std::vector<Object> objects16;
     generate_proposals(anchors, feat_stride, score_blob, bbox_blob,objects16);
@@ -438,7 +448,8 @@ static int detect_thundernet(const cv::Mat& bgr,std::vector<Object>& objects)
 
     // sort all proposals by score from highest to lowest
     qsort_descent_inplace(proposal_boxes);
-
+    double t3 =ncnn::get_current_time();
+    std::cout << "rpn decode " << t3 - t2 << std::endl;
 
     if (pre_nms_topN > 0 && pre_nms_topN < (int)proposal_boxes.size())
     {
@@ -449,9 +460,15 @@ static int detect_thundernet(const cv::Mat& bgr,std::vector<Object>& objects)
     std::vector<int> picked;
     nms_sorted_bboxes(proposal_boxes, picked, nms_rpn);
 
+    double t4 = ncnn::get_current_time();
+    std::cout << "nms: " <<  t4 - t3 << std::endl;
+
     int picked_count = std::min((int)picked.size(), after_nms_topN);
 
+
     objects.resize(picked_count);
+
+//    std::cout <<  picked_count << std::endl;
 
     std::vector<std::vector<Object> > class_candidates;
     for (int i = 0; i < picked_count; i++)
@@ -475,17 +492,20 @@ static int detect_thundernet(const cv::Mat& bgr,std::vector<Object>& objects)
         roi[2] = x1;
         roi[3] = y1;
         ncnn::Mat roi_feat;
-
+//        double t_1 = ncnn::get_current_time();
         psroialign(feat,roi,roi_feat);
+//        double t_2 = ncnn::get_current_time();
 
-        ncnn::Extractor ex2 = thundernet_rcnn.create_extractor();
 
         ncnn::Mat bbox_pred;
         ncnn::Mat cls_prob;
 //        std::cout << roi_feat.c << "," << roi_feat.h << "," << roi_feat.w << std::endl;
+        ncnn::Extractor ex2 = thundernet_rcnn.create_extractor();
         ex2.input("roi_feat", roi_feat);
         ex2.extract("bbox_pred", bbox_pred);
         ex2.extract("cls_score", cls_prob);
+//        double t_3 = ncnn::get_current_time();
+//        std::cout << "psroi:" << t_2 - t_1 << "\trcnn:" <<  t_3 - t_2 << std::endl;
 
         int num_class = cls_prob.w;
         class_candidates.resize(num_class);
@@ -555,6 +575,9 @@ static int detect_thundernet(const cv::Mat& bgr,std::vector<Object>& objects)
 
     }
 
+    double t5 = ncnn::get_current_time();;
+    std::cout << t5 - t4  << std::endl;
+
     objects.clear();
     for (int i = 0; i < (int)class_candidates.size(); i++)
     {
@@ -578,8 +601,12 @@ static int detect_thundernet(const cv::Mat& bgr,std::vector<Object>& objects)
     {
         objects.resize(max_per_image);
     }
+    double t6 = ncnn::get_current_time();;
+    std::cout << t6 - t1 << "\n" << std::endl;
 
     return 0;
+
+
 
 }
 
@@ -623,7 +650,7 @@ static void draw_objects(const cv::Mat& bgr, const std::vector<Object>& objects)
         cv::putText(image, text, cv::Point(x, y + label_size.height),
                     cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 0, 0));
     }
-    cv::imwrite("res.jpg",image);
+    cv::imwrite("../imgs/res.jpg",image);
 //    cv::imshow("image", image);
 //    cv::waitKey(0);
 }
@@ -644,9 +671,12 @@ int main(int argc, char** argv)
         fprintf(stderr, "cv::imread %s failed\n", imagepath);
         return -1;
     }
-
     std::vector<Object> objects;
-    detect_thundernet(m, objects);
+    for (int i=0;i<10;i++){
+
+          detect_thundernet(m, objects);
+    }
+
 
     draw_objects(m, objects);
 

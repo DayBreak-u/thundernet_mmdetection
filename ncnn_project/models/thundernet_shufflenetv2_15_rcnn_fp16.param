@@ -1,0 +1,9 @@
+7767517
+7 8
+Input                    roi_feat                 0 1 roi_feat
+Reshape                  Reshape_5                1 1 roi_feat 14 0=-1
+InnerProduct             Gemm_6                   1 1 14 16 0=1024 1=1 2=221184 9=1
+Split                    splitncnn_0              1 2 16 16_splitncnn_0 16_splitncnn_1
+InnerProduct             Gemm_8                   1 1 16_splitncnn_1 17 0=21 1=1 2=21504
+Softmax                  Softmax_9                1 1 17 cls_score
+InnerProduct             Gemm_10                  1 1 16_splitncnn_0 bbox_pred 0=80 1=1 2=81920

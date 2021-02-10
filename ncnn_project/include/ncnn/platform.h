@@ -32,7 +32,7 @@
 #define NCNN_AVX2 1
 #define NCNN_ARM82 0
 
-#define NCNN_VERSION_STRING "1.0.20210206"
+#define NCNN_VERSION_STRING "1.0.21.02.08"
 
 #include "ncnn_export.h"
 
