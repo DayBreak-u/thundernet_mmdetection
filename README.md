@@ -3,15 +3,6 @@
 基于[mmdetection](https://github.com/open-mmlab/mmdetection) 实现一些轻量级检测模型，安装方式和mmdeteciton相同
 
 
-## Benchmark and model zoo
-
-Supported methods and backbones are shown in the below table.
-Results and models are available in the.
-
-|                    | mobilenetv2   | shufflenetv2  | 
-|--------------------|:-------------:|:-------------:|
-| ThunderNet         | ✓           |               | 
-
 
 ## voc0712
 voc 0712训练 voc2007测试
