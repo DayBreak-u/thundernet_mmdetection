@@ -15,7 +15,7 @@ Results and models are available in the.
 
 ## voc0712
 voc 0712训练 voc2007测试
-thundernet_voc_shufflenetv2_1.5 目前mAP 0.70,训练不够充分 0.71 320, 0.722 252 
+thundernet_voc_shufflenetv2_1.5
 
 |  input   shape           |      mAP      |    
 |--------------------|:-------------:|
