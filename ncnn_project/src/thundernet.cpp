@@ -407,8 +407,6 @@ static int detect_thundernet(const cv::Mat& bgr,std::vector<Object>& objects)
     const float confidence_thresh = 0.4f;
     const int max_per_image = 100;
     const int target_size = 352;
-    const int numThread = 1;
-
 
     int img_w = bgr.cols;
     int img_h = bgr.rows;
@@ -435,7 +433,7 @@ static int detect_thundernet(const cv::Mat& bgr,std::vector<Object>& objects)
     ex.extract("rpn_cls_score", score_blob);
     ex.extract("x", feat);
     double t2 = ncnn::get_current_time();
-    std::cout <<t2 - t1 << std::endl;
+    std::cout <<"backbone cost:" << t2 - t1  << "ms" << std::endl;
 
 
 
@@ -449,7 +447,7 @@ static int detect_thundernet(const cv::Mat& bgr,std::vector<Object>& objects)
     // sort all proposals by score from highest to lowest
     qsort_descent_inplace(proposal_boxes);
     double t3 =ncnn::get_current_time();
-    std::cout << "rpn decode " << t3 - t2 << std::endl;
+    std::cout << "rpn decode cost:" << t3 - t2 << "ms" << std::endl;
 
     if (pre_nms_topN > 0 && pre_nms_topN < (int)proposal_boxes.size())
     {
@@ -461,7 +459,7 @@ static int detect_thundernet(const cv::Mat& bgr,std::vector<Object>& objects)
     nms_sorted_bboxes(proposal_boxes, picked, nms_rpn);
 
     double t4 = ncnn::get_current_time();
-    std::cout << "nms: " <<  t4 - t3 << std::endl;
+    std::cout << "rpn nms cost: " <<  t4 - t3 << "ms" << std::endl;
 
     int picked_count = std::min((int)picked.size(), after_nms_topN);
 
@@ -576,7 +574,7 @@ static int detect_thundernet(const cv::Mat& bgr,std::vector<Object>& objects)
     }
 
     double t5 = ncnn::get_current_time();;
-    std::cout << t5 - t4  << std::endl;
+    std::cout << "rcnn cost:" <<t5 - t4<< "ms"   << std::endl;
 
     objects.clear();
     for (int i = 0; i < (int)class_candidates.size(); i++)
@@ -602,7 +600,7 @@ static int detect_thundernet(const cv::Mat& bgr,std::vector<Object>& objects)
         objects.resize(max_per_image);
     }
     double t6 = ncnn::get_current_time();;
-    std::cout << t6 - t1 << "\n" << std::endl;
+    std::cout << "all cost:" <<t6 - t1 << "ms" << std::endl;
 
     return 0;
 
@@ -650,9 +648,9 @@ static void draw_objects(const cv::Mat& bgr, const std::vector<Object>& objects)
         cv::putText(image, text, cv::Point(x, y + label_size.height),
                     cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 0, 0));
     }
-    cv::imwrite("../imgs/res.jpg",image);
-//    cv::imshow("image", image);
-//    cv::waitKey(0);
+//    cv::imwrite("../imgs/res.jpg",image);
+    cv::imshow("image", image);
+    cv::waitKey(0);
 }
 
 int main(int argc, char** argv)
@@ -672,10 +670,10 @@ int main(int argc, char** argv)
         return -1;
     }
     std::vector<Object> objects;
-    for (int i=0;i<10;i++){
 
-          detect_thundernet(m, objects);
-    }
+
+    detect_thundernet(m, objects);
+
 
 
     draw_objects(m, objects);
