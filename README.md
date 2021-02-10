@@ -14,7 +14,22 @@ Results and models are available in the.
 
 
 ## voc0712
-thundernet_voc_mobilenetv2 目前mAP 0.70,训练不够充分
+voc 0712训练 voc2007测试
+thundernet_voc_shufflenetv2_1.5 目前mAP 0.70,训练不够充分 0.71 320, 0.722 252 
+
+|  input   shape           |      mAP      |    
+|--------------------|:-------------:|
+| 320*320         | 0.71            | 
+| 352*352         | 0.722           | 
+| 384*384         | 0.734            | 
+| 416*416         | 0.738           | 
+| 448*448         | 0.744           | 
+| 480*480         | 0.747           | 
+
+
+## ncnn project
+[ncnn](https://github.com/ouyanghuiyu/thundernet_mmdetection/tree/master/ncnn_project)
+
 
 ## Get Started
 
