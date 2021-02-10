@@ -406,7 +406,7 @@ static int detect_thundernet(const cv::Mat& bgr,std::vector<Object>& objects)
     const float nms_threshold = 0.5f;
     const float confidence_thresh = 0.4f;
     const int max_per_image = 100;
-    const int target_size = 352;
+    const int target_size = 320;
 
     int img_w = bgr.cols;
     int img_h = bgr.rows;
