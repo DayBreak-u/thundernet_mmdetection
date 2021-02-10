@@ -319,8 +319,6 @@ int psroialign( ncnn::Mat bottom_blob,ncnn::Mat  roi_blob, ncnn::Mat& top_blob)
                 int hend = static_cast<int>(ceil(roi_y1 + (float)(ph + 1) * bin_size_h));
                 int wend = static_cast<int>(ceil(roi_x1 + (float)(pw + 1) * bin_size_w));
 
-
-
                 hstart = std::min(std::max(hstart, 0), h);
                 wstart = std::min(std::max(wstart, 0), w);
                 hend = std::min(std::max(hend, 0), h);
@@ -331,7 +329,9 @@ int psroialign( ncnn::Mat bottom_blob,ncnn::Mat  roi_blob, ncnn::Mat& top_blob)
 
 
                 bool is_empty = (hend <= hstart) || (wend <= wstart);
-                int area = (hend - hstart) * (wend - wstart);
+
+//                int area = (hend - hstart) * (wend - wstart);
+                int area = bin_grid_h * bin_grid_w;
 
                 float sum = 0.f;
 
@@ -412,6 +412,7 @@ static int detect_thundernet(const cv::Mat& bgr,std::vector<Object>& objects)
     int img_h = bgr.rows;
     float scale_w = (float)target_size / img_w;
     float scale_h = (float)target_size / img_h;
+
 
     ncnn::Mat in = ncnn::Mat::from_pixels_resize(bgr.data, ncnn::Mat::PIXEL_BGR,img_w,img_h ,target_size, target_size);
 
