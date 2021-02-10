@@ -10,6 +10,15 @@ from .rpn_test_mixin import RPNTestMixin
 from mmdet.core import merge_aug_proposals
 
 
+class h_sigmoid(nn.Module):
+    def __init__(self, inplace=True):
+        super(h_sigmoid, self).__init__()
+        self.relu = nn.ReLU6(inplace=inplace)
+
+    def forward(self, x):
+        return self.relu(x + 3) / 6
+
+
 @HEADS.register_module()
 class LightRPNHead(RPNTestMixin, AnchorHead):
     """RPN head.
@@ -34,6 +43,7 @@ class LightRPNHead(RPNTestMixin, AnchorHead):
         self.sam = nn.Conv2d(
             self.feat_channels, self.in_channels, 1, padding=0,bias=False)
         self.bn = nn.BatchNorm2d(self.in_channels)
+        self.act = h_sigmoid()
 
     def init_weights(self):
         """Initialize weights of the head."""
@@ -49,7 +59,7 @@ class LightRPNHead(RPNTestMixin, AnchorHead):
         rpn_out = F.relu(rpn_out, inplace=True)
         rpn_out = self.rpn_conv_linear(rpn_out)
         rpn_out = F.relu(rpn_out, inplace=True)
-        sam = torch.sigmoid(self.bn(self.sam(rpn_out)))
+        sam = self.act(self.bn(self.sam(rpn_out)))
         x = x * sam
         rpn_cls_score = self.rpn_cls(rpn_out)
         rpn_bbox_pred = self.rpn_reg(rpn_out)

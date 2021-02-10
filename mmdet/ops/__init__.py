@@ -1,0 +1,1 @@
+from mmdet.ops.psroi_align.modules.psroi_align import PSRoIAlign

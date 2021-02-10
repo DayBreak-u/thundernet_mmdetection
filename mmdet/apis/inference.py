@@ -185,3 +185,4 @@ def show_result_pyplot(model,
     plt.title(title)
     plt.tight_layout()
     plt.show(block=block)
+    return img

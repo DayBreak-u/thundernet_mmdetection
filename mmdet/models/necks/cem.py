@@ -38,6 +38,7 @@ class CEM(nn.Module):
         Cglb_lat = F.relu(self.convlast(avg_pool))
 
         outs = [C4_lat + C5_lat + Cglb_lat]
+        # outs = [C4_lat + C5_lat]
 
 
         return tuple(outs)

@@ -179,7 +179,7 @@ class Shared2FCBBoxHead(ConvFCBBoxHead):
     def __init__(self, fc_out_channels=1024, *args, **kwargs):
         super(Shared2FCBBoxHead, self).__init__(
             num_shared_convs=0,
-            num_shared_fcs=1,
+            num_shared_fcs=2,
             num_cls_convs=0,
             num_cls_fcs=0,
             num_reg_convs=0,
