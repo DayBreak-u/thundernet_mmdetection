@@ -291,13 +291,13 @@ int psroialign( ncnn::Mat bottom_blob,ncnn::Mat  roi_blob, ncnn::Mat& top_blob)
     // For each ROI R = [x y w h]: avg pool over R
     const float* roi_ptr = roi_blob;
 
-    float roi_x1 = static_cast<float>(roi_ptr[0] * spatial_scale - 0.5f);
-    float roi_y1 = static_cast<float>(roi_ptr[1] * spatial_scale - 0.5f);
-    float roi_x2 = static_cast<float>(roi_ptr[2] * spatial_scale - 0.5f);
-    float roi_y2 = static_cast<float>(roi_ptr[3] * spatial_scale - 0.5f);
+    float roi_x1 = roi_ptr[0] * spatial_scale - 0.5f;
+    float roi_y1 = roi_ptr[1] * spatial_scale - 0.5f;
+    float roi_x2 = roi_ptr[2] * spatial_scale - 0.5f;
+    float roi_y2 = roi_ptr[3] * spatial_scale - 0.5f;
 
-    float roi_w = std::max(roi_x2 - roi_x1, 0.1f);
-    float roi_h = std::max(roi_y2 - roi_y1, 0.1f);
+    float roi_w = roi_x2 - roi_x1;
+    float roi_h = roi_y2 - roi_y1;
 
     float bin_size_w = roi_w / (float)pooled_width;
     float bin_size_h = roi_h / (float)pooled_height;
@@ -314,15 +314,11 @@ int psroialign( ncnn::Mat bottom_blob,ncnn::Mat  roi_blob, ncnn::Mat& top_blob)
             {
                 const float* ptr = bottom_blob.channel((q * pooled_height + ph) * pooled_width + pw);
 
-                int hstart = static_cast<int>(floor(roi_y1 + (float)(ph)*bin_size_h));
-                int wstart = static_cast<int>(floor(roi_x1 + (float)(pw)*bin_size_w));
-                int hend = static_cast<int>(ceil(roi_y1 + (float)(ph + 1) * bin_size_h));
-                int wend = static_cast<int>(ceil(roi_x1 + (float)(pw + 1) * bin_size_w));
+                float hstart = roi_y1 + (float)(ph)*bin_size_h;
+                float wstart = roi_x1 + (float)(pw)*bin_size_w;
+                float hend = roi_y1 + (float)(ph + 1) * bin_size_h;
+                float wend = roi_x1 + (float)(pw + 1) * bin_size_w;
 
-                hstart = std::min(std::max(hstart, 0), h);
-                wstart = std::min(std::max(wstart, 0), w);
-                hend = std::min(std::max(hend, 0), h);
-                wend = std::min(std::max(wend, 0), w);
 
                 int bin_grid_h = (int)(sampling_ratio > 0 ? sampling_ratio : ceil(hend - hstart));
                 int bin_grid_w = (int)(sampling_ratio > 0 ? sampling_ratio : ceil(wend - wstart));
