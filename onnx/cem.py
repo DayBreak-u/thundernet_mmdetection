@@ -14,6 +14,7 @@ class CEM(nn.Module):
         self.conv4 = nn.Conv2d(in_channels[0], out_channels, 1, bias=True)
         self.conv5 = nn.Conv2d(in_channels[1], out_channels, 1, bias=True)
         self.convlast = nn.Conv2d(in_channels[1], out_channels, 1, bias=True)
+        self.smooth = nn.Conv2d(out_channels, out_channels, 3, 1, 1, bias=True)
         self.avg_pool = nn.AdaptiveAvgPool2d(1)
 
 
@@ -26,7 +27,9 @@ class CEM(nn.Module):
         avg_pool = self.avg_pool(inputs[-1])
         Cglb_lat = F.relu(self.convlast(avg_pool))
 
-        outs = [C4_lat + C5_lat + Cglb_lat]
+        C4_lat = C4_lat + C5_lat + Cglb_lat
+        C4_lat = F.relu(self.smooth(C4_lat))
+        outs = [C4_lat]
+        # outs = [C4_lat + C5_lat]
 
-
-        return outs[0]
+        return tuple(outs)

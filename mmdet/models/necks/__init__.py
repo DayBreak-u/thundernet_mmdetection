@@ -9,8 +9,10 @@ from .pafpn import PAFPN
 from .rfp import RFP
 from .yolo_neck import YOLOV3Neck
 from .cem import CEM
+from .iitefpn import LiteFpn
+from .cem2 import CEM2
 
 __all__ = [
     'FPN', 'BFP', 'ChannelMapper', 'HRFPN', 'NASFPN', 'FPN_CARAFE', 'PAFPN',
-    'NASFCOS_FPN', 'RFP', 'YOLOV3Neck',"CEM"
+    'NASFCOS_FPN', 'RFP', 'YOLOV3Neck',"CEM","LiteFpn","CEM2"
 ]

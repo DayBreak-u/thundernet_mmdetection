@@ -10,6 +10,8 @@ from .rpn_test_mixin import RPNTestMixin
 from mmdet.core import merge_aug_proposals
 
 
+
+
 class h_sigmoid(nn.Module):
     def __init__(self, inplace=True):
         super(h_sigmoid, self).__init__()
@@ -32,10 +34,12 @@ class LightRPNHead(RPNTestMixin, AnchorHead):
 
     def _init_layers(self):
         """Initialize layers of the head."""
-        self.rpn_conv_dw = nn.Conv2d(
-            self.in_channels, self.in_channels, 5, padding=2, groups=self.in_channels)
-        self.rpn_conv_linear = nn.Conv2d(
+        self.rpn_conv_exp = nn.Conv2d(
             self.in_channels, self.feat_channels, 1, padding=0)
+        self.rpn_conv_dw = nn.Conv2d(
+            self.feat_channels, self.feat_channels, 5, padding=2, groups=self.feat_channels)
+        self.rpn_conv_linear = nn.Conv2d(
+            self.feat_channels, self.feat_channels, 1, padding=0)
 
         self.rpn_cls = nn.Conv2d(self.feat_channels,
                                  self.num_anchors * self.cls_out_channels, 1)
@@ -47,6 +51,7 @@ class LightRPNHead(RPNTestMixin, AnchorHead):
 
     def init_weights(self):
         """Initialize weights of the head."""
+        normal_init(self.rpn_conv_exp, std=0.01)
         normal_init(self.rpn_conv_dw, std=0.01)
         normal_init(self.rpn_conv_linear, std=0.01)
         normal_init(self.rpn_cls, std=0.01)
@@ -55,7 +60,9 @@ class LightRPNHead(RPNTestMixin, AnchorHead):
 
     def forward_single(self, x):
         """Forward feature map of a single scale level."""
-        rpn_out = self.rpn_conv_dw(x)
+        rpn_out = self.rpn_conv_exp(x)
+        rpn_out = F.relu(rpn_out, inplace=True)
+        rpn_out = self.rpn_conv_dw(rpn_out)
         rpn_out = F.relu(rpn_out, inplace=True)
         rpn_out = self.rpn_conv_linear(rpn_out)
         rpn_out = F.relu(rpn_out, inplace=True)
@@ -64,6 +71,9 @@ class LightRPNHead(RPNTestMixin, AnchorHead):
         rpn_cls_score = self.rpn_cls(rpn_out)
         rpn_bbox_pred = self.rpn_reg(rpn_out)
         return rpn_cls_score, rpn_bbox_pred, x
+
+
+
 
     def simple_test_rpn(self, x, img_metas):
         """Test without augmentation.

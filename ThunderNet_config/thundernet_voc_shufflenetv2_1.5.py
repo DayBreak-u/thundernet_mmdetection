@@ -16,7 +16,7 @@ model = dict(
     rpn_head=dict(
         type='LightRPNHead',
         in_channels=216,
-        feat_channels=256,
+        feat_channels=512,
         anchor_generator=dict(
             type='AnchorGenerator',
             scales=[2, 4, 8, 16, 32],
@@ -61,6 +61,7 @@ train_cfg = dict(
             pos_iou_thr=0.7,
             neg_iou_thr=0.3,
             min_pos_iou=0.3,
+            match_low_quality=True,
             ignore_iof_thr=-1),
         sampler=dict(
             type='RandomSampler',
@@ -84,6 +85,7 @@ train_cfg = dict(
             pos_iou_thr=0.5,
             neg_iou_thr=0.5,
             min_pos_iou=0.5,
+            match_low_quality=False,
             ignore_iof_thr=-1),
         sampler=dict(
             type='OHEMSampler',
@@ -160,7 +162,7 @@ data = dict(
     workers_per_gpu=8,
     train=dict(
         type='RepeatDataset',
-        times=5,
+        times=2,
         dataset=dict(
             type=dataset_type,
             ann_file=[
@@ -181,7 +183,7 @@ data = dict(
         pipeline=test_pipeline))
 evaluation = dict(interval=1, metric='mAP')
 # optimizer
-optimizer = dict(type='SGD', lr=1e-2, momentum=0.9, weight_decay=1e-4)
+optimizer = dict(type='SGD', lr=1e-3, momentum=0.9, weight_decay=1e-4)
 optimizer_config = dict()
 # learning policy
 lr_config = dict(
@@ -203,9 +205,9 @@ log_config = dict(
 total_epochs = 30
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-work_dir = './thundernet_voc_shufflenetv2_1.5'
+work_dir = './thundernet_voc_v2_shufflenetv2_1.5'
 load_from = None
-# load_from = './work_dirs/thundernet_voc_shufflenetv2_1.5/latest.pth'
-# resume_from = '/data-user/work_dirs/thundernet_voc_shufflenetv2_2.0/latest.pth'
-resume_from = './thundernet_voc_shufflenetv2_1.5/latest.pth'
+# load_from = './thundernet_coco_shufflenetv2_1.5/latest.pth'
+resume_from = './thundernet_voc_v2_shufflenetv2_1.5/latest.pth'
+# resume_from = None
 workflow = [('train', 1)]

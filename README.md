@@ -17,9 +17,20 @@ thundernet_voc_shufflenetv2_1.5
 | 448*448         | 0.744           | 
 | 480*480         | 0.747           | 
 
+thundernet_voc_shufflenetv2_1.5_fpn
 
-## ncnn project
-[ncnn](https://github.com/ouyanghuiyu/thundernet_mmdetection/tree/master/ncnn_project)
+|  input   shape           |      mAP      |    
+|--------------------|:-------------:|
+| 320*320         | 0.732            | 
+| 352*352         | 0.7           | 
+| 384*384         | 0.7            | 
+| 416*416         | 0.7           | 
+| 448*448         | 0.7           | 
+| 480*480         | 0.7           | 
+
+
+## 移动端推理 ncnn project
+[thundernet_ncnn](https://github.com/ouyanghuiyu/thundernet_ncnn)
 
 
 ## Get Started
