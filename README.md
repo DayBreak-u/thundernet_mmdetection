@@ -5,7 +5,7 @@
 
 
 ## voc0712
-voc 0712训练 voc2007测试
+voc 0712训练 voc2007测试 coco预训练
 thundernet_voc_shufflenetv2_1.5
 
 |  input   shape           |      mAP      |    
@@ -17,17 +17,13 @@ thundernet_voc_shufflenetv2_1.5
 | 448*448         | 0.744           | 
 | 480*480         | 0.747           | 
 
-thundernet_voc_shufflenetv2_1.5_fpn
+## coco2017
 
-|  input   shape           |      mAP      |    
+thundernet_coco_shufflenetv2_1.5
+
+|  input   shape           |      AP(0.5:0.95)      |    
 |--------------------|:-------------:|
-| 320*320         | 0.732            | 
-| 352*352         | 0.7           | 
-| 384*384         | 0.7            | 
-| 416*416         | 0.7           | 
-| 448*448         | 0.7           | 
-| 480*480         | 0.7           | 
-
+| 320*320         | 0.22            | 
 
 ## 移动端推理 ncnn project
 [thundernet_ncnn](https://github.com/ouyanghuiyu/thundernet_ncnn)
